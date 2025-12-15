@@ -1,0 +1,48 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
+import Link from "next/link";
+import { useMediaUrl } from "@/lib/hooks/useMediaUrl";
+
+interface HeaderProps {
+  businessName?: string;
+  logoUrl?: string;
+}
+
+export function Header({ businessName, logoUrl }: HeaderProps) {
+  const resolvedLogoUrl = useMediaUrl(logoUrl);
+
+  return (
+    <header className="border-b bg-white sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center space-x-2">
+          {resolvedLogoUrl ? (
+            <img
+              src={resolvedLogoUrl}
+              alt={businessName || "Business"}
+              className="h-8 w-8 object-contain"
+            />
+          ) : (
+            <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {businessName?.charAt(0) || "F"}
+              </span>
+            </div>
+          )}
+          <span className="font-semibold text-lg">
+            {businessName || "QuoteFlow"}
+          </span>
+        </Link>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
+          Log out
+        </Button>
+      </div>
+    </header>
+  );
+}

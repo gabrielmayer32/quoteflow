@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  phone        String
+  address      String?
+  logoUrl      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  requests     Request[]
+  quotes       Quote[]
+
+  @@map("businesses")
+}
+
+model Request {
+  id            String        @id @default(cuid())
+  businessId    String
+  status        RequestStatus @default(NEW)
+
+  // Client info
+  clientName    String
+  clientPhone   String
+  clientAddress String
+  problemDesc   String        @db.Text
+
+  // Media (stored as JSON array of URLs)
+  mediaUrls     String[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  business      Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  quotes        Quote[]
+
+  @@index([businessId, status])
+  @@index([createdAt])
+  @@map("requests")
+}
+
+enum RequestStatus {
+  NEW
+  REVIEWING
+  QUOTED
+  APPROVED
+  REJECTED
+  SCHEDULED
+  COMPLETED
+}
+
+model Quote {
+  id            String      @id @default(cuid())
+  requestId     String
+  businessId    String
+
+  // Line items stored as JSON: [{desc: string, qty: number, unitPrice: number}]
+  lineItems     Json
+  notes         String?     @db.Text
+  validUntil    DateTime?
+
+  total         Decimal     @db.Decimal(10, 2)
+
+  status        QuoteStatus @default(PENDING)
+  rejectionNote String?
+
+  // Unique token for public approval link
+  approvalToken String      @unique @default(cuid())
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  request       Request     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  business      Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([approvalToken])
+  @@map("quotes")
+}
+
+enum QuoteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
