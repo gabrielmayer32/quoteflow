@@ -70,8 +70,14 @@ export function getPublicR2Url(key: string): string {
   const base = process.env.R2_PUBLIC_BASE_URL;
   if (base) return `${base.replace(/\/$/, "")}/${key}`;
 
-  // Default R2 public URL format (works only if bucket/public domain allows it)
-  return `https://${process.env.R2_BUCKET}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`;
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const bucket = process.env.R2_BUCKET;
+  if (!accountId || !bucket) {
+    throw new Error("Missing R2_ACCOUNT_ID or R2_BUCKET for public URL generation.");
+  }
+
+  // Default R2 public URL format: https://<account>.r2.cloudflarestorage.com/<bucket>/<key>
+  return `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}`;
 }
 
 /**
