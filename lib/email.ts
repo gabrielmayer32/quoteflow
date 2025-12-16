@@ -144,18 +144,25 @@ export async function sendNewRequestNotifications({
     </div>
   `;
 
-  await Promise.all([
+  const emailTasks: Promise<void>[] = [
     sendEmailMessage({
       to: business.email,
       subject: `New request from ${request.clientName}`,
       html: businessHtml,
     }),
-    sendEmailMessage({
-      to: request.clientEmail || undefined,
-      subject: `${business.name} received your request`,
-      html: clientHtml,
-    }),
-  ]);
+  ];
+
+  if (request.clientEmail) {
+    emailTasks.push(
+      sendEmailMessage({
+        to: request.clientEmail,
+        subject: `${business.name} received your request`,
+        html: clientHtml,
+      })
+    );
+  }
+
+  await Promise.all(emailTasks);
 }
 
 export async function sendClientStatusUpdateEmail({
