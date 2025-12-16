@@ -18,6 +18,7 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     clientName: "",
+    clientEmail: "",
     clientPhone: "",
     clientAddress: "",
     problemDesc: "",
@@ -33,6 +34,7 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
       const data = new FormData();
       data.append("businessId", businessId);
       data.append("clientName", formData.clientName);
+      data.append("clientEmail", formData.clientEmail);
       data.append("clientPhone", formData.clientPhone);
       data.append("clientAddress", formData.clientAddress);
       data.append("problemDesc", formData.problemDesc);
@@ -76,6 +78,7 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
 
   const isValid =
     formData.clientName.trim() &&
+    formData.clientEmail.trim() &&
     formData.clientPhone.trim() &&
     formData.clientAddress.trim() &&
     formData.problemDesc.trim();
@@ -93,6 +96,24 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
           type="text"
           placeholder="Enter your full name"
           value={formData.clientName}
+          onChange={handleChange}
+          required
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Client Phone */}
+      {/* Client Email */}
+      <div className="space-y-2">
+        <Label htmlFor="clientEmail">
+          Email Address <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="clientEmail"
+          name="clientEmail"
+          type="email"
+          placeholder="e.g., you@email.com"
+          value={formData.clientEmail}
           onChange={handleChange}
           required
           disabled={isSubmitting}

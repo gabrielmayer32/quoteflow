@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { sendClientStatusUpdateEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         id,
         businessId: session.user.id,
       },
+      include: {
+        business: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     if (!existingRequest) {
@@ -55,6 +64,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const updatedRequest = await prisma.request.update({
       where: { id },
       data: { status: validation.data.status },
+    });
+
+    await sendClientStatusUpdateEmail({
+      business: {
+        name: existingRequest.business.name,
+        email: existingRequest.business.email,
+      },
+      request: {
+        id: existingRequest.id,
+        clientName: existingRequest.clientName,
+        clientEmail: existingRequest.clientEmail,
+        clientPhone: existingRequest.clientPhone,
+        clientAddress: existingRequest.clientAddress,
+        problemDesc: existingRequest.problemDesc,
+      },
+      newStatus: validation.data.status,
     });
 
     return NextResponse.json({

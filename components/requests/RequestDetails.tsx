@@ -1,5 +1,6 @@
 interface Request {
   clientName: string;
+  clientEmail?: string | null;
   clientPhone: string;
   clientAddress: string;
   problemDesc: string;
@@ -20,6 +21,16 @@ export function RequestDetails({ request }: RequestDetailsProps) {
           <label className="text-sm font-medium text-gray-500">Client Name</label>
           <p className="text-gray-900 mt-1">{request.clientName}</p>
         </div>
+        {request.clientEmail && (
+          <div>
+            <label className="text-sm font-medium text-gray-500">Email</label>
+            <p className="text-gray-900 mt-1">
+              <a href={`mailto:${request.clientEmail}`} className="text-blue-600 hover:underline">
+                {request.clientEmail}
+              </a>
+            </p>
+          </div>
+        )}
         <div>
           <label className="text-sm font-medium text-gray-500">Phone Number</label>
           <p className="text-gray-900 mt-1">

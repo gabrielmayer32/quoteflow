@@ -32,7 +32,14 @@ R2_SECRET_ACCESS_KEY="your_secret_access_key"
 R2_BUCKET="your_bucket_name"
 R2_ACCOUNT_ID="your_account_id"
 R2_USE_SIGNED_URLS="true"
+
+# Email (Resend)
+RESEND_API_KEY="re_your_api_key"
+RESEND_FROM_EMAIL="Remote Quote <notifications@yourdomain.com>"
+RESEND_REPLY_TO="support@yourdomain.com"
 ```
+
+> Resend powers the transactional emails. Make sure your sender domain is verified inside Resend before going live, otherwise messages will be blocked.
 
 ### Generate NEXTAUTH_SECRET
 

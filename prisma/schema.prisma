@@ -31,6 +31,7 @@ model Request {
 
   // Client info
   clientName    String
+  clientEmail   String?
   clientPhone   String
   clientAddress String
   problemDesc   String        @db.Text

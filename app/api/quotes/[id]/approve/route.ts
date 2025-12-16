@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { sendClientStatusUpdateEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -38,7 +39,22 @@ export async function POST(request: NextRequest, { params }: Params) {
         approvalToken: token,
       },
       include: {
-        request: true,
+        request: {
+          select: {
+            id: true,
+            clientName: true,
+            clientEmail: true,
+            clientPhone: true,
+            clientAddress: true,
+            problemDesc: true,
+          },
+        },
+        business: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -57,6 +73,10 @@ export async function POST(request: NextRequest, { params }: Params) {
       );
     }
 
+    const newStatus = action === "approve" ? "APPROVED" : "REJECTED";
+
+    let message: string;
+
     if (action === "approve") {
       // Approve quote
       await prisma.$transaction([
@@ -71,11 +91,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           data: { status: "APPROVED" },
         }),
       ]);
-
-      return NextResponse.json({
-        success: true,
-        message: "Quote approved successfully",
-      });
+      message = "Quote approved successfully";
     } else {
       // Reject quote
       if (!rejectionNote) {
@@ -100,12 +116,29 @@ export async function POST(request: NextRequest, { params }: Params) {
           data: { status: "REJECTED" },
         }),
       ]);
-
-      return NextResponse.json({
-        success: true,
-        message: "Quote rejected successfully",
-      });
+      message = "Quote rejected successfully";
     }
+
+    await sendClientStatusUpdateEmail({
+      business: {
+        name: quote.business.name,
+        email: quote.business.email,
+      },
+      request: {
+        id: quote.request.id,
+        clientName: quote.request.clientName,
+        clientEmail: quote.request.clientEmail,
+        clientPhone: quote.request.clientPhone,
+        clientAddress: quote.request.clientAddress,
+        problemDesc: quote.request.problemDesc,
+      },
+      newStatus,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message,
+    });
   } catch (error) {
     console.error("Quote approval error:", error);
     return NextResponse.json(

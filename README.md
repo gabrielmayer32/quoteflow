@@ -42,6 +42,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 - **Quote Builder** - Create professional quotes with line items
 - **PDF Generation** - Generate branded quote PDFs
 - **Status Tracking** - Monitor quotes from submission to completion
+- **Email Notifications** - Automatic alerts when clients submit or when statuses change
 - **Mobile App** - Fully responsive mobile experience
 
 ### For Clients
@@ -49,6 +50,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 - **Quote Review** - View detailed quote breakdowns
 - **Quick Approval** - Approve or reject with one click
 - **PDF Download** - Save quotes for records
+- **Status Emails** - Receive confirmation + updates throughout the process
 
 ## 🛠 Tech Stack
 
@@ -90,7 +92,12 @@ R2_SECRET_ACCESS_KEY=
 R2_BUCKET=
 R2_ACCOUNT_ID=
 R2_USE_SIGNED_URLS=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL="Remote Quote <notifications@example.com>"
+RESEND_REPLY_TO="support@example.com"
 ```
+
+Email notifications are powered by [Resend](https://resend.com/). Create an API key, verify your sender domain, and set the `RESEND_*` variables to enable business + client emails.
 
 ## 📖 Documentation
 
@@ -127,10 +134,10 @@ Or follow the detailed [deployment guide](DEPLOYMENT.md).
 - Quote approval flow
 - PDF generation
 - R2 file storage
+- Email notifications
 - Mobile responsiveness
 
 ### Planned 📋
-- Email notifications
 - Payment integration
 - Client portal
 - Scheduling system

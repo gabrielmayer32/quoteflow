@@ -38,6 +38,7 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
         select: {
           id: true,
           clientName: true,
+          clientEmail: true,
           clientPhone: true,
           clientAddress: true,
           problemDesc: true,
@@ -110,6 +111,12 @@ export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) 
             <p className="text-sm text-gray-500 mb-1">Name</p>
             <p className="text-gray-900 font-medium">{quote.request.clientName}</p>
           </div>
+          {quote.request.clientEmail && (
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Email</p>
+              <p className="text-gray-900 font-medium">{quote.request.clientEmail}</p>
+            </div>
+          )}
           <div>
             <p className="text-sm text-gray-500 mb-1">Phone</p>
             <p className="text-gray-900 font-medium">{quote.request.clientPhone}</p>

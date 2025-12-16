@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { Decimal } from "@prisma/client/runtime/library";
+import { sendClientStatusUpdateEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,14 @@ export async function POST(request: NextRequest) {
         id: requestId,
         businessId,
       },
+      include: {
+        business: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     if (!existingRequest) {
@@ -84,6 +93,23 @@ export async function POST(request: NextRequest) {
     await prisma.request.update({
       where: { id: requestId },
       data: { status: "QUOTED" },
+    });
+
+    await sendClientStatusUpdateEmail({
+      business: {
+        name: existingRequest.business.name,
+        email: existingRequest.business.email,
+      },
+      request: {
+        id: existingRequest.id,
+        clientName: existingRequest.clientName,
+        clientEmail: existingRequest.clientEmail,
+        clientPhone: existingRequest.clientPhone,
+        clientAddress: existingRequest.clientAddress,
+        problemDesc: existingRequest.problemDesc,
+      },
+      newStatus: "QUOTED",
+      quoteApprovalToken: quote.approvalToken,
     });
 
     return NextResponse.json({

@@ -4,6 +4,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { z } from "zod";
 import { uploadToR2AndReturnKey, generateFileKey, isR2Configured } from "@/lib/r2";
+import { sendNewRequestNotifications } from "@/lib/email";
 
 export const runtime = "nodejs";
 // app/api/intake/route.ts
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";    // optional, if you want to avoid cac
 const intakeSchema = z.object({
   businessId: z.string().cuid(),
   clientName: z.string().min(1, "Client name is required"),
+  clientEmail: z.string().email("A valid email is required"),
   clientPhone: z.string().min(1, "Phone number is required"),
   clientAddress: z.string().min(1, "Service location is required"),
   problemDesc: z.string().min(10, "Please provide more details about the problem"),
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
     const rawData = {
       businessId: formData.get("businessId") as string,
       clientName: formData.get("clientName") as string,
+      clientEmail: formData.get("clientEmail") as string,
       clientPhone: formData.get("clientPhone") as string,
       clientAddress: formData.get("clientAddress") as string,
       problemDesc: formData.get("problemDesc") as string,
@@ -42,7 +45,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { businessId, clientName, clientPhone, clientAddress, problemDesc } = validation.data;
+    const {
+      businessId,
+      clientName,
+      clientEmail,
+      clientPhone,
+      clientAddress,
+      problemDesc,
+    } = validation.data;
 
     // Verify business exists
     const business = await prisma.business.findUnique({
@@ -63,20 +73,18 @@ export async function POST(request: NextRequest) {
 
     if (files.length > 0) {
       if (useR2) {
-  for (const file of files) {
-    if (file.size > 0) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
+        for (const file of files) {
+          if (file.size > 0) {
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
 
-      const key = generateFileKey(file.name, "requests"); // "requests/...."
-      const storedKey = await uploadToR2AndReturnKey(buffer, key, file.type);
+            const key = generateFileKey(file.name, "requests");
+            const storedKey = await uploadToR2AndReturnKey(buffer, key, file.type);
 
-      // IMPORTANT: prefix so the UI knows it must resolve via /api/media-url
-      mediaUrls.push(`r2:${storedKey}`);
-    }
-  }
-}
- else {
+            mediaUrls.push(`r2:${storedKey}`);
+          }
+        }
+      } else {
         // Fallback to local storage
         const uploadsDir = join(process.cwd(), "public", "uploads");
         try {
@@ -112,11 +120,27 @@ export async function POST(request: NextRequest) {
       data: {
         businessId,
         clientName,
+        clientEmail,
         clientPhone,
         clientAddress,
         problemDesc,
         mediaUrls,
         status: "NEW",
+      },
+    });
+
+    await sendNewRequestNotifications({
+      business: {
+        name: business.name,
+        email: business.email,
+      },
+      request: {
+        id: newRequest.id,
+        clientName,
+        clientEmail,
+        clientPhone,
+        clientAddress,
+        problemDesc,
       },
     });
 
