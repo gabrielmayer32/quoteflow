@@ -48,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: business.id,
           email: business.email,
           name: business.name,
+          paymentStatus: business.paymentStatus,
         };
       },
     }),
@@ -56,15 +57,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     authorized: async ({ auth }) => {
       return !!auth;
     },
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger }) => {
       if (user) {
         token.id = user.id;
+        token.paymentStatus = user.paymentStatus;
       }
+
+      // Refresh payment status on update trigger
+      if (trigger === "update" && token.id) {
+        const business = await prisma.business.findUnique({
+          where: { id: token.id as string },
+          select: { paymentStatus: true },
+        });
+        if (business) {
+          token.paymentStatus = business.paymentStatus;
+        }
+      }
+
       return token;
     },
     session: async ({ session, token }) => {
       if (token.id) {
         session.user.id = token.id as string;
+        session.user.paymentStatus = token.paymentStatus as string;
       }
       return session;
     },

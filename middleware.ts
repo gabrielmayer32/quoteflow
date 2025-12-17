@@ -81,6 +81,22 @@ export default auth((request) => {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
+  // Check payment status for authenticated users on protected routes
+  if (request.auth && !isPublicPath && pathname !== "/payment-pending") {
+    const paymentStatus = (request.auth as any).user?.paymentStatus;
+    if (paymentStatus === "UNPAID") {
+      return NextResponse.redirect(new URL("/payment-pending", request.url));
+    }
+  }
+
+  // Prevent accessing payment-pending page if already paid
+  if (request.auth && pathname === "/payment-pending") {
+    const paymentStatus = (request.auth as any).user?.paymentStatus;
+    if (paymentStatus === "PAID") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
   return NextResponse.next();
 });
 
