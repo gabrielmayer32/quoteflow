@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,24 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const emailParam = searchParams.get("email");
   const verified = searchParams.get("verified");
+  const autoVerified = searchParams.get("autoVerified");
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: emailParam || "",
     password: "",
   });
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  // Show a more prominent message if user just verified email
+  const showVerifiedMessage = verified === "true";
+
+  // Auto-focus password field if email is pre-filled
+  useEffect(() => {
+    if (emailParam && passwordInputRef.current) {
+      passwordInputRef.current.focus();
+    }
+  }, [emailParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,10 +82,10 @@ function LoginForm() {
             Log in to manage your quotes and requests
           </CardDescription>
         </CardHeader>
-        {verified === "true" && (
+        {showVerifiedMessage && (
           <div className="mx-6 mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-800 text-center">
-              ✓ Email verified successfully! You can now log in.
+            <p className="text-sm text-green-800 text-center font-medium">
+              ✓ Email verified successfully! Please enter your password to log in.
             </p>
           </div>
         )}
@@ -95,6 +107,7 @@ function LoginForm() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
+                ref={passwordInputRef}
                 id="password"
                 type="password"
                 placeholder="Enter your password"

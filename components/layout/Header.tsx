@@ -31,7 +31,7 @@ export function Header({ businessName, logoUrl }: HeaderProps) {
             </div>
           )}
           <span className="font-semibold text-lg">
-            {businessName || "QuoteFlow"}
+            {businessName || "FlowQuote"}
           </span>
         </Link>
 

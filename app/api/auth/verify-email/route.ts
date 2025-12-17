@@ -48,8 +48,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Redirect to verification page with auto-login flag
     return NextResponse.redirect(
-      new URL(`/verify-email?status=success&email=${encodeURIComponent(business.email)}`, request.url)
+      new URL(`/verify-email?status=success&email=${encodeURIComponent(business.email)}&autoLogin=true`, request.url)
     );
   } catch (error) {
     console.error("Email verification error:", error);

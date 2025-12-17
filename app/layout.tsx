@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuoteFlow - Get Quotes Without Site Visits",
+  title: "FlowQuote - Get Quotes Without Site Visits",
   description: "Remote quotation system for service businesses in Mauritius",
 };
 

@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,35 +11,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertCircle, Mail } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Mail, Loader2 } from "lucide-react";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const status = searchParams.get("status");
   const email = searchParams.get("email");
   const message = searchParams.get("message");
-
-  const handleAutoLogin = async () => {
-    if (!email) return;
-
-    setIsLoggingIn(true);
-    // Redirect to login page with email pre-filled
-    router.push(`/login?email=${encodeURIComponent(email)}&verified=true`);
-  };
+  const autoLogin = searchParams.get("autoLogin");
 
   useEffect(() => {
-    if (status === "success") {
-      // Auto-redirect after 3 seconds
+    if (status === "success" && autoLogin === "true") {
+      // Auto-redirect to login page with verified flag
+      setIsRedirecting(true);
       const timer = setTimeout(() => {
-        handleAutoLogin();
+        router.push(`/login?email=${encodeURIComponent(email || "")}&verified=true&autoVerified=true`);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    } else if (status === "success") {
+      // Regular redirect to login
+      const timer = setTimeout(() => {
+        setIsRedirecting(true);
+        router.push(`/login?email=${encodeURIComponent(email || "")}&verified=true`);
       }, 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [status, email]);
+  }, [status, email, autoLogin, router]);
 
   if (status === "success") {
     return (
@@ -57,21 +58,36 @@ function VerifyEmailContent() {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-sm text-gray-600">
-              Welcome to QuoteFlow! You can now log in and start managing your quotes and requests.
+              Welcome to FlowQuote! You can now log in and start managing your quotes and requests.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                Redirecting to login page in 3 seconds...
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                {isRedirecting && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+                <p className="text-sm text-blue-800">
+                  {autoLogin === "true"
+                    ? "Redirecting to login in 2 seconds..."
+                    : "Redirecting to login in 3 seconds..."}
+                </p>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
             <Button
-              onClick={handleAutoLogin}
+              onClick={() => {
+                setIsRedirecting(true);
+                router.push(`/login?email=${encodeURIComponent(email || "")}&verified=true`);
+              }}
               className="w-full"
-              disabled={isLoggingIn}
+              disabled={isRedirecting}
             >
-              {isLoggingIn ? "Redirecting..." : "Continue to Login"}
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Redirecting...
+                </>
+              ) : (
+                "Continue to Login"
+              )}
             </Button>
           </CardFooter>
         </Card>

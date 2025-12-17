@@ -60,7 +60,7 @@ export default function SignupPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>
-            Start getting QuoteFlows for your business
+            Start getting FlowQuotes for your business
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
