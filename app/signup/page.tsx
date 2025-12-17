@@ -44,8 +44,9 @@ export default function SignupPage() {
         return;
       }
 
-      toast.success("Account created successfully!");
-      router.push("/login");
+      toast.success(data.message || "Account created successfully!");
+      // Show success message and redirect to a verification pending page
+      router.push("/signup/verify-email");
     } catch (error) {
       toast.error("An error occurred. Please try again.");
     } finally {

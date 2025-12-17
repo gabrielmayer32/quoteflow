@@ -9,9 +9,8 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { error: "Verification token is required" },
-        { status: 400 }
+      return NextResponse.redirect(
+        new URL(`/verify-email?status=error&message=${encodeURIComponent("Verification token is required")}`, request.url)
       );
     }
 
@@ -20,16 +19,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!business) {
-      return NextResponse.json(
-        { error: "Invalid verification token" },
-        { status: 400 }
+      return NextResponse.redirect(
+        new URL(`/verify-email?status=error&message=${encodeURIComponent("Invalid verification token")}`, request.url)
       );
     }
 
     if (business.emailVerified) {
-      return NextResponse.json(
-        { message: "Email already verified" },
-        { status: 200 }
+      return NextResponse.redirect(
+        new URL(`/verify-email?status=already-verified&email=${encodeURIComponent(business.email)}`, request.url)
       );
     }
 
@@ -37,9 +34,8 @@ export async function GET(request: NextRequest) {
       business.emailVerificationTokenExpiry &&
       business.emailVerificationTokenExpiry < new Date()
     ) {
-      return NextResponse.json(
-        { error: "Verification token has expired" },
-        { status: 400 }
+      return NextResponse.redirect(
+        new URL(`/verify-email?status=expired&email=${encodeURIComponent(business.email)}`, request.url)
       );
     }
 
@@ -52,15 +48,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Email verified successfully",
-    });
+    return NextResponse.redirect(
+      new URL(`/verify-email?status=success&email=${encodeURIComponent(business.email)}`, request.url)
+    );
   } catch (error) {
     console.error("Email verification error:", error);
-    return NextResponse.json(
-      { error: "An error occurred during email verification" },
-      { status: 500 }
+    return NextResponse.redirect(
+      new URL(`/verify-email?status=error&message=${encodeURIComponent("An error occurred during email verification")}`, request.url)
     );
   }
 }

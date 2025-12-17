@@ -21,10 +21,12 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const emailParam = searchParams.get("email");
+  const verified = searchParams.get("verified");
 
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    email: emailParam || "",
     password: "",
   });
 
@@ -40,7 +42,12 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password");
+        // Check if error is related to email verification
+        if (result.error.includes("verify your email")) {
+          toast.error("Please verify your email address before logging in. Check your inbox for the verification link.");
+        } else {
+          toast.error("Invalid email or password");
+        }
         return;
       }
 
@@ -63,6 +70,13 @@ function LoginForm() {
             Log in to manage your quotes and requests
           </CardDescription>
         </CardHeader>
+        {verified === "true" && (
+          <div className="mx-6 mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-green-800 text-center">
+              ✓ Email verified successfully! You can now log in.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
