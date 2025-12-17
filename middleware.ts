@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 const publicRoutes = ["/", "/login", "/signup", "/intake", "/approve"];
@@ -10,37 +10,61 @@ const allowedOrigins = [
   process.env.NODE_ENV === "development" ? "http://localhost:3000" : null,
 ].filter(Boolean) as string[];
 
+function corsMiddleware(request: NextRequest) {
+  const origin = request.headers.get("origin");
+  const pathname = request.nextUrl.pathname;
+
+  // Only apply CORS to API routes
+  if (!pathname.startsWith("/api")) {
+    return null;
+  }
+
+  // Handle preflight OPTIONS requests
+  if (request.method === "OPTIONS") {
+    const allowOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": allowOrigin,
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  return null;
+}
+
+function addCorsHeaders(response: NextResponse, origin: string | null) {
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+  }
+  return response;
+}
+
 export default auth((request) => {
   const { pathname } = request.nextUrl;
   const origin = request.headers.get("origin");
 
-  // Handle CORS for API routes
-  if (pathname.startsWith("/api")) {
-    // Handle preflight requests
-    if (request.method === "OPTIONS") {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-          "Access-Control-Max-Age": "86400",
-        },
-      });
-    }
-
-    // Add CORS headers to API responses
-    const response = NextResponse.next();
-    if (origin && allowedOrigins.includes(origin)) {
-      response.headers.set("Access-Control-Allow-Origin", origin);
-      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    }
-    return response;
+  // Handle CORS preflight before anything else
+  const corsResponse = corsMiddleware(request);
+  if (corsResponse) {
+    return corsResponse;
   }
 
-  if (pathname.startsWith("/_next")) {
-    return NextResponse.next();
+  // Skip auth for API routes and _next
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+    const response = NextResponse.next();
+    // Add CORS headers to API responses
+    if (pathname.startsWith("/api")) {
+      return addCorsHeaders(response, origin);
+    }
+    return response;
   }
 
   const isPublicPath = publicRoutes.some(
