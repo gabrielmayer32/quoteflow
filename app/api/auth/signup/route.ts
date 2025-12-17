@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { sendEmailVerification } from "@/lib/email";
+import crypto from "crypto";
 
 // Force Node.js runtime for Prisma compatibility
 export const runtime = "nodejs";
@@ -42,6 +44,11 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const tokenExpiry = new Date();
+    tokenExpiry.setHours(tokenExpiry.getHours() + 24); // 24 hours from now
+
     // Create business
     const business = await prisma.business.create({
       data: {
@@ -49,12 +56,28 @@ export async function POST(request: NextRequest) {
         passwordHash,
         name: businessName,
         phone,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationTokenExpiry: tokenExpiry,
       },
     });
+
+    // Send verification email
+    try {
+      await sendEmailVerification({
+        email,
+        businessName,
+        verificationToken,
+      });
+    } catch (error) {
+      console.error("Failed to send verification email:", error);
+      // Don't fail signup if email fails to send
+    }
 
     return NextResponse.json({
       success: true,
       businessId: business.id,
+      message: "Account created! Please check your email to verify your account.",
     });
   } catch (error) {
     console.error("Signup error:", error);

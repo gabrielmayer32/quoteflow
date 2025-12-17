@@ -39,6 +39,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        // Check if email is verified
+        if (!business.emailVerified) {
+          throw new Error("Please verify your email address before logging in. Check your inbox for the verification link.");
+        }
+
         return {
           id: business.id,
           email: business.email,

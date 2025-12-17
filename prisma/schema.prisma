@@ -8,15 +8,18 @@ datasource db {
 }
 
 model Business {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  phone        String
-  address      String?
-  logoUrl      String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String
+  phone                 String
+  address               String?
+  logoUrl               String?
+  emailVerified         Boolean   @default(false)
+  emailVerificationToken String?  @unique
+  emailVerificationTokenExpiry DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   requests     Request[]
   quotes       Quote[]

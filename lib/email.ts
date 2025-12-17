@@ -226,3 +226,38 @@ export async function sendClientStatusUpdateEmail({
     html: clientHtml,
   });
 }
+
+export async function sendEmailVerification({
+  email,
+  businessName,
+  verificationToken,
+}: {
+  email: string;
+  businessName: string;
+  verificationToken: string;
+}) {
+  const verificationUrl = `${getBaseUrl()}/api/auth/verify-email?token=${verificationToken}`;
+  const safeBusinessName = escapeHtml(businessName);
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+      <h2 style="margin-bottom: 8px;">Welcome to QuoteFlow!</h2>
+      <p style="margin: 0 0 16px;">Hi ${safeBusinessName},</p>
+      <p style="margin: 0 0 16px;">Thank you for signing up! Please verify your email address to complete your registration and start using QuoteFlow.</p>
+      <p style="margin-top:24px;margin-bottom:16px;">
+        <a href="${verificationUrl}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+          Verify Email Address
+        </a>
+      </p>
+      <p style="margin:16px 0 0;font-size:14px;color:#64748b;">
+        This link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.
+      </p>
+    </div>
+  `;
+
+  await sendEmailMessage({
+    to: email,
+    subject: "Verify your email address - QuoteFlow",
+    html,
+  });
+}
