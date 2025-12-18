@@ -59,12 +59,14 @@ export async function GET() {
         name: true,
         phone: true,
         paymentStatus: true,
+        paymentSubmittedAt: true,
         emailVerified: true,
         createdAt: true,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        { paymentSubmittedAt: "desc" },
+        { createdAt: "desc" },
+      ],
     });
 
     return NextResponse.json({

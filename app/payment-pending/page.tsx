@@ -1,16 +1,82 @@
-import { auth, signOut } from "@/lib/auth";
-import { redirect } from "next/navigation";
+"use client";
 
-export default async function PaymentPendingPage() {
-  const session = await auth();
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-  if (!session) {
-    redirect("/login");
+export default function PaymentPendingPage() {
+  const router = useRouter();
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data || !data.user) {
+          router.push("/login");
+          return;
+        }
+        if (data.user.paymentStatus === "PAID") {
+          router.push("/dashboard");
+          return;
+        }
+        setSession(data);
+
+        // Check if payment was already submitted
+        checkPaymentSubmission();
+      })
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  const checkPaymentSubmission = async () => {
+    try {
+      const response = await fetch("/api/payment/check-submission");
+      const data = await response.json();
+      if (data.submitted) {
+        setPaymentSubmitted(true);
+      }
+    } catch (error) {
+      console.error("Failed to check payment submission:", error);
+    }
+  };
+
+  const handlePaymentSubmitted = async () => {
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/payment/submit", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setPaymentSubmitted(true);
+      } else {
+        alert("Failed to submit payment confirmation. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to submit payment:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await fetch("/api/auth/signout", { method: "POST" });
+    router.push("/login");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
   }
 
-  // If payment is already done, redirect to dashboard
-  if ((session.user as any).paymentStatus === "PAID") {
-    redirect("/dashboard");
+  if (!session) {
+    return null;
   }
 
   return (
@@ -59,26 +125,41 @@ export default async function PaymentPendingPage() {
             </p>
           </div>
 
-          {/* Contact Info */}
-          <p className="text-sm text-gray-600 mb-6">
-            After making the payment, please contact us to verify your account.
-            We will activate your account within 24 hours of receiving your payment.
-          </p>
+          {/* Payment Submitted Status or Button */}
+          {paymentSubmitted ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-center mb-2">
+                <svg className="h-5 w-5 text-green-600 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                <h3 className="font-semibold text-green-900">Payment Confirmation Received</h3>
+              </div>
+              <p className="text-sm text-green-800">
+                Thank you! We've received your payment confirmation. Your account will be activated within 24 hours after we verify your payment.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600 mb-4">
+                Once you've completed the bank transfer, click the button below to notify us.
+              </p>
+              <button
+                onClick={handlePaymentSubmitted}
+                disabled={submitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Submitting..." : "I've Completed the Transfer"}
+              </button>
+            </>
+          )}
 
           {/* Logout Button */}
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/login" });
-            }}
+          <button
+            onClick={handleSignOut}
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors"
           >
-            <button
-              type="submit"
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors"
-            >
-              Sign Out
-            </button>
-          </form>
+            Sign Out
+          </button>
         </div>
       </div>
     </div>

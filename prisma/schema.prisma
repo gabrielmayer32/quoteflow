@@ -19,6 +19,7 @@ model Business {
   emailVerificationToken String?  @unique
   emailVerificationTokenExpiry DateTime?
   paymentStatus         PaymentStatus @default(UNPAID)
+  paymentSubmittedAt    DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

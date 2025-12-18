@@ -261,3 +261,55 @@ export async function sendEmailVerification({
     html,
   });
 }
+
+export async function sendPaymentNotification({
+  businessName,
+  businessEmail,
+  submittedAt,
+}: {
+  businessName: string;
+  businessEmail: string;
+  submittedAt: Date;
+}) {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.RESEND_FROM_EMAIL;
+
+  if (!adminEmail) {
+    console.warn("No admin email configured for payment notifications");
+    return;
+  }
+
+  const safeBusinessName = escapeHtml(businessName);
+  const safeBusinessEmail = escapeHtml(businessEmail);
+  const formattedDate = new Date(submittedAt).toLocaleString('en-US', {
+    dateStyle: 'full',
+    timeStyle: 'short',
+  });
+
+  const adminUrl = `${getBaseUrl()}/admin`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+      <h2 style="margin-bottom: 8px;">Payment Confirmation Submitted</h2>
+      <p style="margin: 0 0 16px;">A business has confirmed they've completed their bank transfer payment.</p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px;">
+        <p style="margin:0;"><strong>Business Name:</strong> ${safeBusinessName}</p>
+        <p style="margin:0;"><strong>Email:</strong> ${safeBusinessEmail}</p>
+        <p style="margin:0;"><strong>Submitted At:</strong> ${formattedDate}</p>
+      </div>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">
+        Please verify the payment in your bank account and activate their account once confirmed.
+      </p>
+      <p style="margin-top:24px;margin-bottom:16px;">
+        <a href="${adminUrl}" style="background:#2563eb;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+          Open Admin Panel
+        </a>
+      </p>
+    </div>
+  `;
+
+  await sendEmailMessage({
+    to: adminEmail,
+    subject: `Payment Confirmation: ${businessName}`,
+    html,
+  });
+}

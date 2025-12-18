@@ -9,6 +9,7 @@ interface Business {
   name: string;
   phone: string;
   paymentStatus: "PAID" | "UNPAID";
+  paymentSubmittedAt: string | null;
   emailVerified: boolean;
   createdAt: string;
 }
@@ -101,6 +102,9 @@ export default function AdminPage() {
                     Payment Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment Submitted
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Created
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -140,6 +144,20 @@ export default function AdminPage() {
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                           UNPAID
                         </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {business.paymentSubmittedAt ? (
+                        <div>
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 mb-1">
+                            Pending Verification
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            {new Date(business.paymentSubmittedAt).toLocaleString()}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">Not submitted</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
