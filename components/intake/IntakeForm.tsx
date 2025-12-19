@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { FileUpload } from "@/components/intake/FileUpload";
 import { SequentialPhotoCapture } from "@/components/photo-capture/SequentialPhotoCapture";
 import { toast } from "sonner";
 
@@ -25,7 +24,6 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
     problemDesc: "",
   });
   const [files, setFiles] = useState<File[]>([]);
-  const [useGuidedCapture, setUseGuidedCapture] = useState(false);
   const [captureMetadata, setCaptureMetadata] = useState<
     { stepId: string; stepTitle: string; photoName: string }[] | null
   >(null);
@@ -92,12 +90,7 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
   ) => {
     setFiles(photos);
     setCaptureMetadata(metadata);
-    setUseGuidedCapture(false);
     toast.success(`${photos.length} photos captured successfully!`);
-  };
-
-  const handleGuidedCaptureCancel = () => {
-    setUseGuidedCapture(false);
   };
 
   const isValid =
@@ -105,7 +98,8 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
     formData.clientEmail.trim() &&
     formData.clientPhone.trim() &&
     formData.clientAddress.trim() &&
-    formData.problemDesc.trim();
+    formData.problemDesc.trim() &&
+    files.length === 3;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -199,40 +193,14 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
         </p>
       </div>
 
-      {/* File Upload */}
+      {/* Guided Photo Capture */}
       <div className="space-y-2">
         <Label>
-          Photos or Videos <span className="text-gray-500 text-sm font-normal">(Optional)</span>
+          Photos <span className="text-red-500">*</span>
         </Label>
-
-        {!useGuidedCapture ? (
-          <>
-            <FileUpload
-              files={files}
-              onFilesChange={setFiles}
-              disabled={isSubmitting}
-            />
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500">
-                Upload images or videos showing the problem. Max 10 files, 10MB each.
-              </p>
-              <Button
-                type="button"
-                variant="link"
-                onClick={() => setUseGuidedCapture(true)}
-                disabled={isSubmitting}
-                className="text-xs"
-              >
-                Use Guided Photo Capture
-              </Button>
-            </div>
-          </>
-        ) : (
-          <SequentialPhotoCapture
-            onComplete={handleGuidedCaptureComplete}
-            onCancel={handleGuidedCaptureCancel}
-          />
-        )}
+        <SequentialPhotoCapture
+          onComplete={handleGuidedCaptureComplete}
+        />
       </div>
 
       {/* Submit Button */}

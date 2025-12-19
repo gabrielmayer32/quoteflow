@@ -60,13 +60,13 @@ export function SequentialPhotoCapture({
       <div className="flex justify-between gap-4">
         <div className="flex gap-2">
           {canGoBack && (
-            <Button variant="outline" onClick={previousStep}>
+            <Button type="button" variant="outline" onClick={previousStep}>
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
           )}
           {onCancel && currentStepIndex === 0 && (
-            <Button variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           )}
@@ -74,13 +74,13 @@ export function SequentialPhotoCapture({
 
         <div className="flex gap-2">
           {canProceed && (
-            <Button onClick={nextStep}>
+            <Button type="button" onClick={nextStep}>
               Next
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           )}
           {isComplete && (
-            <Button onClick={handleComplete}>
+            <Button type="button" onClick={handleComplete}>
               Complete Capture
             </Button>
           )}

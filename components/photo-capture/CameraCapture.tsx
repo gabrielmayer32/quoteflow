@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, Upload, RotateCcw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -30,6 +30,13 @@ export function CameraCapture({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Ensure video element properly receives and displays the stream
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
   const startCamera = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -46,6 +53,12 @@ export function CameraCapture({
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        // Ensure video plays
+        try {
+          await videoRef.current.play();
+        } catch (playError) {
+          console.error('Video play error:', playError);
+        }
       }
     } catch (err) {
       setError(
@@ -164,7 +177,7 @@ export function CameraCapture({
         <div className="flex flex-col gap-2">
           {!capturedPhoto && !stream && (
             <>
-              <Button onClick={startCamera} disabled={isLoading} className="w-full">
+              <Button type="button" onClick={startCamera} disabled={isLoading} className="w-full">
                 <Camera className="w-4 h-4 mr-2" />
                 {isLoading ? 'Starting Camera...' : 'Start Camera'}
               </Button>
@@ -177,6 +190,7 @@ export function CameraCapture({
                 </div>
               </div>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full"
@@ -197,10 +211,10 @@ export function CameraCapture({
 
           {stream && !capturedPhoto && (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={stopCamera} className="flex-1">
+              <Button type="button" variant="outline" onClick={stopCamera} className="flex-1">
                 Cancel
               </Button>
-              <Button onClick={capturePhoto} className="flex-1">
+              <Button type="button" onClick={capturePhoto} className="flex-1">
                 <Camera className="w-4 h-4 mr-2" />
                 Capture Photo
               </Button>
@@ -209,11 +223,11 @@ export function CameraCapture({
 
           {capturedPhoto && (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={retakePhoto} className="flex-1">
+              <Button type="button" variant="outline" onClick={retakePhoto} className="flex-1">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Retake
               </Button>
-              <Button onClick={confirmPhoto} className="flex-1">
+              <Button type="button" onClick={confirmPhoto} className="flex-1">
                 <Check className="w-4 h-4 mr-2" />
                 Confirm
               </Button>
