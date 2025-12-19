@@ -9,20 +9,20 @@ interface CameraCaptureProps {
   stepTitle: string;
   stepDescription: string;
   onPhotoCapture: (photo: File, previewUrl: string) => void;
-  existingPhoto?: { file: File; previewUrl: string } | null;
+  autoStart?: boolean;
 }
 
 export function CameraCapture({
   stepTitle,
   stepDescription,
   onPhotoCapture,
-  existingPhoto,
+  autoStart = false,
 }: CameraCaptureProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedPhoto, setCapturedPhoto] = useState<{
     file: File;
     previewUrl: string;
-  } | null>(existingPhoto || null);
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +36,20 @@ export function CameraCapture({
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
+
+  // Auto-start camera when component mounts if autoStart is true
+  useEffect(() => {
+    if (autoStart && !stream && !capturedPhoto) {
+      startCamera();
+    }
+    // Cleanup stream when component unmounts
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
 
   const startCamera = useCallback(async () => {
     setIsLoading(true);

@@ -134,9 +134,9 @@ export default function PaymentPendingPage() {
               Please make a bank transfer to activate your account:
             </p>
             <div className="text-sm text-blue-900 space-y-1">
-              <p><strong>Account Name:</strong> Your Company Name</p>
-              <p><strong>Account Number:</strong> 123456789</p>
-              <p><strong>Bank:</strong> Example Bank</p>
+              <p><strong>Account Name:</strong> Flowquote.io </p>
+              <p><strong>Account Number:</strong> 0004 4184 7048</p>
+              <p><strong>Bank Name:</strong> The Mauritius Commercial Bank</p>
               <p><strong>Reference:</strong> {session.user.email}</p>
             </div>
             <p className="text-xs text-blue-700 mt-3">

@@ -47,14 +47,11 @@ export function SequentialPhotoCapture({
       <CaptureSequenceIndicator steps={steps} currentStepIndex={currentStepIndex} />
 
       <CameraCapture
+        key={currentStep.id}
         stepTitle={currentStep.title}
         stepDescription={currentStep.description}
         onPhotoCapture={handlePhotoCapture}
-        existingPhoto={
-          currentStep.photo && currentStep.previewUrl
-            ? { file: currentStep.photo, previewUrl: currentStep.previewUrl }
-            : null
-        }
+        autoStart={!currentStep.completed}
       />
 
       <div className="flex justify-between gap-4">
