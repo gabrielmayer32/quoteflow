@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
       problemDesc: formData.get("problemDesc") as string,
     };
 
+    // Extract optional capture metadata
+    const captureMetadataStr = formData.get("captureMetadata") as string | null;
+    const captureMetadata = captureMetadataStr ? JSON.parse(captureMetadataStr) : null;
+
     // Validate form data
     const validation = intakeSchema.safeParse(rawData);
     if (!validation.success) {
@@ -125,6 +129,7 @@ export async function POST(request: NextRequest) {
         clientAddress,
         problemDesc,
         mediaUrls,
+        captureMetadata,
         status: "NEW",
       },
     });

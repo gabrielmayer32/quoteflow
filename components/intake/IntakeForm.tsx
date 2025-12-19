@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/intake/FileUpload";
+import { SequentialPhotoCapture } from "@/components/photo-capture/SequentialPhotoCapture";
 import { toast } from "sonner";
 
 interface IntakeFormProps {
@@ -24,6 +25,10 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
     problemDesc: "",
   });
   const [files, setFiles] = useState<File[]>([]);
+  const [useGuidedCapture, setUseGuidedCapture] = useState(false);
+  const [captureMetadata, setCaptureMetadata] = useState<
+    { stepId: string; stepTitle: string; photoName: string }[] | null
+  >(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +48,11 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
       files.forEach((file) => {
         data.append("files", file);
       });
+
+      // Append capture metadata if using guided capture
+      if (captureMetadata) {
+        data.append("captureMetadata", JSON.stringify(captureMetadata));
+      }
 
       const response = await fetch("/api/intake", {
         method: "POST",
@@ -74,6 +84,20 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  };
+
+  const handleGuidedCaptureComplete = (
+    photos: File[],
+    metadata: { stepId: string; stepTitle: string; photoName: string }[]
+  ) => {
+    setFiles(photos);
+    setCaptureMetadata(metadata);
+    setUseGuidedCapture(false);
+    toast.success(`${photos.length} photos captured successfully!`);
+  };
+
+  const handleGuidedCaptureCancel = () => {
+    setUseGuidedCapture(false);
   };
 
   const isValid =
@@ -180,14 +204,35 @@ export function IntakeForm({ businessId }: IntakeFormProps) {
         <Label>
           Photos or Videos <span className="text-gray-500 text-sm font-normal">(Optional)</span>
         </Label>
-        <FileUpload
-          files={files}
-          onFilesChange={setFiles}
-          disabled={isSubmitting}
-        />
-        <p className="text-xs text-gray-500">
-          Upload images or videos showing the problem. Max 10 files, 10MB each.
-        </p>
+
+        {!useGuidedCapture ? (
+          <>
+            <FileUpload
+              files={files}
+              onFilesChange={setFiles}
+              disabled={isSubmitting}
+            />
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                Upload images or videos showing the problem. Max 10 files, 10MB each.
+              </p>
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => setUseGuidedCapture(true)}
+                disabled={isSubmitting}
+                className="text-xs"
+              >
+                Use Guided Photo Capture
+              </Button>
+            </div>
+          </>
+        ) : (
+          <SequentialPhotoCapture
+            onComplete={handleGuidedCaptureComplete}
+            onCancel={handleGuidedCaptureCancel}
+          />
+        )}
       </div>
 
       {/* Submit Button */}

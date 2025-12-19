@@ -49,6 +49,9 @@ model Request {
   // Media (stored as JSON array of URLs)
   mediaUrls     String[]
 
+  // Capture metadata for guided photo sequence
+  captureMetadata Json?
+
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
