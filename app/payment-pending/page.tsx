@@ -11,23 +11,42 @@ export default function PaymentPendingPage() {
   const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data || !data.user) {
-          router.push("/login");
-          return;
-        }
-        if (data.user.paymentStatus === "PAID") {
-          router.push("/dashboard");
-          return;
-        }
-        setSession(data);
+    const checkSession = async () => {
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
 
-        // Check if payment was already submitted
-        checkPaymentSubmission();
-      })
-      .finally(() => setLoading(false));
+      if (!data || !data.user) {
+        router.push("/login");
+        return;
+      }
+
+      // Check fresh payment status from database
+      const refreshRes = await fetch("/api/auth/refresh-session", { method: "POST" });
+      const refreshData = await refreshRes.json();
+
+      if (refreshData.paymentStatus === "PAID") {
+        router.push("/dashboard");
+        return;
+      }
+
+      setSession(data);
+      await checkPaymentSubmission();
+      setLoading(false);
+    };
+
+    checkSession();
+
+    // Poll every 10 seconds to check if admin marked as paid
+    const interval = setInterval(async () => {
+      const refreshRes = await fetch("/api/auth/refresh-session", { method: "POST" });
+      const refreshData = await refreshRes.json();
+
+      if (refreshData.paymentStatus === "PAID") {
+        router.push("/dashboard");
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [router]);
 
   const checkPaymentSubmission = async () => {

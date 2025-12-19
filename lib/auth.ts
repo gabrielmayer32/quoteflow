@@ -57,21 +57,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     authorized: async ({ auth }) => {
       return !!auth;
     },
-    jwt: async ({ token, user, trigger }) => {
+    jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id;
         token.paymentStatus = user.paymentStatus;
-      }
-
-      // Always refresh payment status from database
-      if (token.id) {
-        const business = await prisma.business.findUnique({
-          where: { id: token.id as string },
-          select: { paymentStatus: true },
-        });
-        if (business) {
-          token.paymentStatus = business.paymentStatus;
-        }
       }
 
       return token;
