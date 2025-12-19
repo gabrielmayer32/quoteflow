@@ -63,8 +63,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.paymentStatus = user.paymentStatus;
       }
 
-      // Refresh payment status on update trigger
-      if (trigger === "update" && token.id) {
+      // Always refresh payment status from database
+      if (token.id) {
         const business = await prisma.business.findUnique({
           where: { id: token.id as string },
           select: { paymentStatus: true },
